@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div id="messages">
+            <div v-for="message in messages">
+                <strong>{{ message.username }}</strong>: {{ message.text }}
+            </div>
+        </div>
+        <input type="text" id="message" v-model="message">
+        <button id="send" @keyup.a="send" @click="send">Send</button>
+        <div id="users">
+            <div v-for="user in users">
+                {{ user }}
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script>
+    //connect to server
+    var socket = new WebSocket('ws://localhost:3001');
+   
+    const addMessage = (message) => {
+        //add message to messages
+        Vue.set(app.messages, app.messages.length, message);
+    }
+
+    const setMessages = (messages) => {
+        //set messages
+        Vue.set(app, 'messages', messages);
+    }
+
+    const setUsers = (users) => {
+        //set users
+        Vue.set(app, 'users', users);
+    }
+
+    const removeUser = (user) => {
+        //remove user from users
+        const index = app.users.indexOf(user);
+        if (index !== -1) {
+            Vue.delete(app.users, index);
+        }
+    }
+
+    const addUser = (user) => {
+        //add user to users
+        Vue.set(app.users, app.users.length, user);
+    }
+
+    socket.addEventListener('message', function (event) {
+        //get message from server
+        var message = JSON.parse(event.data);
+
+        switch (message.type) {
+            case "MESSAGES_ADD":
+                addMessage(message.data);
+                break;
+            case 'USERS_SET':
+                setUsers(message.data);
+                break;
+            case 'MESSAGES_SET':
+                setMessages(message.data);
+                break;
+            case 'USERS_REMOVE':
+                removeUser(message.data);
+                break;
+            case 'ADD_USER':
+                addUser(message.data);
+                break;
+        }
+    });
+</script>
+<script>
+    //create a vue instance
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: '',
+            messages: [],
+            users: []
+        },
+        methods: {
+            send: function () {
+                //send message to server
+                socket.send(JSON.stringify({ text: this.message }));
+                //clear message
+                this.message = '';
+            }
+        }
+    });
+
+
+</script>
+
+</html>
