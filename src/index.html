@@ -22,6 +22,10 @@
                 {{ user }}
             </div>
         </div>
+        <div id="change_username">
+            <input type="text" id="username" v-model="username">
+            <button id="change_username" @click="changeUsername">Change Username</button>
+        </div>
     </div>
 
 
@@ -87,6 +91,7 @@
         el: '#app',
         data: {
             message: '',
+            username: '',
             messages: [],
             users: []
         },
@@ -96,6 +101,12 @@
                 socket.send(JSON.stringify({ text: this.message }));
                 //clear message
                 this.message = '';
+            },
+            changeUsername: function () {
+                //send message to server
+                socket.send(JSON.stringify({ type:"CHANGE_USERNAME", data: this.username }));
+                //clear message
+                this.username = '';
             }
         }
     });

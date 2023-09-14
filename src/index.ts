@@ -35,7 +35,7 @@ const server = Bun.serve({
             server.publish("chat", JSON.stringify({
                 type: "ADD_USER", data: ws.data.username
             }))
-            
+
             //send message to the newly connected containing existing users and messages
             ws.send(JSON.stringify({ type: "USERS_SET", data: users }))
             ws.send(JSON.stringify({ type: "MESSAGES_SET", data: messages }))
@@ -48,13 +48,16 @@ const server = Bun.serve({
         message(ws: Bun.WebSocket, data) {
             const message = JSON.parse(data)
 
-            message.username = ws.data.username
-            //store the message
-            messages.push(message)
-            //publish the message
-            server.publish("chat", JSON.stringify({
-                type: "MESSAGES_ADD", data: message
-            }))
+            switch (message.type) {
+                case "CHANGE_USERNAME":
+                    changeUsername(ws, message.data)
+                    break;
+                default:
+                    addNewMessage(ws, message)
+                    break;
+            }
+
+
         },
         close(ws: Bun.WebSocket) {
             //remove the user
@@ -68,3 +71,37 @@ const server = Bun.serve({
     }
 })
 
+function changeUsername(ws: Bun.WebSocket, username: string) {
+    //remove the user
+    users.splice(users.indexOf(ws.data.username), 1)
+    //save old username
+    const oldUsername = ws.data.username
+    //set the new username
+    ws.data.username = username
+    //add the user
+    users.push(ws.data.username)
+    //publish the user left
+    server.publish("chat", JSON.stringify({
+        type: "USERS_REMOVE", data: oldUsername
+    }))
+    //publish the new user
+    server.publish("chat", JSON.stringify({
+        type: "ADD_USER", data: ws.data.username
+    }))
+    //publish the user left
+    server.publish("chat", JSON.stringify({
+        type: "MESSAGES_ADD", data: { username: "Server", text: oldUsername + " changed their name to " + ws.data.username }
+    }))
+}
+
+function addNewMessage(ws: Bun.WebSocket, message: Message) {
+    message.username = ws.data.username
+    //store the message
+    messages.push(message)
+    //publish the message
+    server.publish("chat", JSON.stringify({
+        type: "MESSAGES_ADD", data: message
+    }))
+}
+
+console.log(`Listening on http://localhost:${server.port} ...`);
