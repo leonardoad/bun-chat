@@ -33,8 +33,8 @@
                         <div class="username font-bold text-sm"
                             :class="{'text-right': isCurrentUser(message.username)}">{{isCurrentUser(message.username) ?
                             'You': message.username }}</div>
-                        <div class="text bg-gray-200 rounded-lg py-2 px-4 inline-block w-auto"
-                            :class="{'self-end': isCurrentUser(message.username)}">{{ message.text }}</div>
+                        <div class="text bg-gray-200 rounded-lg py-2 px-4 inline-block w-auto self-start"
+                            :class="{'self-end bg-gray-700 text-white' : isCurrentUser(message.username)}">{{ message.text }}</div>
                     </div>
                 </div>
             </div>
