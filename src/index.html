@@ -62,9 +62,26 @@
     const addMessage = (message) => {
         //add message to messages
         Vue.set(app.messages, app.messages.length, message);
+        scrollToBottom();
     }
 
     const setMessages = (messages) => {
+        //set messages
+        Vue.set(app, 'messages', messages);
+    }
+    const updateMessages = ({oldUsername, newUsername}) => {
+        const messages = app.messages;
+
+        //update messages
+        messages.forEach((message) => {
+            if (message.username === oldUsername) {
+                message.username = newUsername;
+            }
+        });
+
+        if(app.currentUser === oldUsername){
+            setCurrentUser(newUsername);
+        }
         //set messages
         Vue.set(app, 'messages', messages);
     }
@@ -72,6 +89,9 @@
     const setUsers = (users) => {
         //set users
         Vue.set(app, 'users', users);
+    }
+    const setCurrentUser = (username) => {
+        Vue.set(app, 'currentUser', username);
     }
 
     const removeUser = (user) => {
@@ -83,8 +103,6 @@
     }
 
     const addUser = (user) => {
-        Vue.set(app, 'currentUser', user);
-
         //add user to users
         Vue.set(app.users, app.users.length, user);
     }
@@ -108,6 +126,12 @@
                 break;
             case 'ADD_USER':
                 addUser(message.data);
+                break;
+            case 'USER_SET':
+                setCurrentUser(message.data);
+                break;
+            case 'USER_CHANGE_USERNAME':
+                updateMessages(message.data);
                 break;
         }
     });

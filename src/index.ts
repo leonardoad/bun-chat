@@ -37,6 +37,7 @@ const server = Bun.serve({
             }))
 
             //send message to the newly connected containing existing users and messages
+            ws.send(JSON.stringify({ type: "USER_SET", data: ws.data.username }))
             ws.send(JSON.stringify({ type: "USERS_SET", data: users }))
             ws.send(JSON.stringify({ type: "MESSAGES_SET", data: messages }))
             server.publish("chat", JSON.stringify({
@@ -80,6 +81,19 @@ function changeUsername(ws: Bun.WebSocket, username: string) {
     ws.data.username = username
     //add the user
     users.push(ws.data.username)
+
+    //update old messages
+    messages.forEach(message => {
+        if (message.username === oldUsername) {
+            message.username = `${ws.data.username}`;
+        }
+    })
+
+    //publish the user left
+    server.publish("chat", JSON.stringify({
+        type: "USER_CHANGE_USERNAME", data: { oldUsername: oldUsername, newUsername: ws.data.username }
+    }))
+
     //publish the user left
     server.publish("chat", JSON.stringify({
         type: "USERS_REMOVE", data: oldUsername
