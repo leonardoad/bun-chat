@@ -31,23 +31,24 @@
                 <div v-for="message in messages">
                     <div class="chat-message  flex flex-col mb-4 justify-start">
                         <div class="username font-bold text-sm"
-                            :class="{'text-right': currentUser == message.username}">{{ message.username }}</div>
+                            :class="{'text-right': isCurrentUser(message.username)}">{{isCurrentUser(message.username) ?
+                            'You': message.username }}</div>
                         <div class="text bg-gray-200 rounded-lg py-2 px-4 inline-block w-auto"
-                            :class="{'self-end': currentUser == message.username}">{{ message.text }}</div>
+                            :class="{'self-end': isCurrentUser(message.username)}">{{ message.text }}</div>
                     </div>
                 </div>
             </div>
             <div class="chat-input bg-gray-200 p-6 flex items-center">
-                <input type="text" id="message" placeholder="Type your message..." v-model="message"
+                <input type="text" id="message" @keyup.enter="send" placeholder="Type your message..." v-model="message"
                     class="flex-1 py-2 px-4 rounded-lg mr-4">
-                <button id="send" @keyup.a="send" @click="send"
-                    class="bg-gray-800 text-white py-2 px-4 rounded-lg">Send</button>
+                <button id="send" @click="send" class="bg-gray-800 text-white py-2 px-4 rounded-lg">Send</button>
             </div>
         </div>
 
         <div id="change_username" class="mt-6">
             <div class="chat-input bg-gray-200 p-6 flex items-center">
-                <input type="text" id="username" v-model="username" class="flex-1 py-2 px-4 rounded-lg mr-4">
+                <input type="text" id="username" @keyup.enter="changeUsername" v-model="username"
+                    class="flex-1 py-2 px-4 rounded-lg mr-4">
                 <button id="change_username" @click="changeUsername"
                     class="bg-gray-800 text-white py-2 px-4 rounded-lg">Change Username</button>
             </div>
@@ -125,20 +126,38 @@
         },
         methods: {
             send: function () {
+                if(this.message === '') return;
                 //send message to server
                 socket.send(JSON.stringify({ text: this.message }));
                 //clear message
                 this.message = '';
+                scrollToBottom();
             },
             changeUsername: function () {
+                if(this.username === '') return;
                 //send message to server
                 socket.send(JSON.stringify({ type: "CHANGE_USERNAME", data: this.username }));
                 //clear message
                 this.username = '';
+            },
+            isCurrentUser: function (username) {
+                return this.currentUser === username;
             }
-        }
+        },
+        mounted() {
+            scrollToBottom();
+        },
+
     });
 
+    const scrollToBottom = () => {
+        setTimeout(() => {
+            //scroll the page to the end
+            setTimeout(() => {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 100);
+        }, 100);
+    }
 
 </script>
 
