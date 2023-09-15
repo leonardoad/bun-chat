@@ -6,34 +6,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.4.6/tailwind.min.css">
 </head>
 
-<body>
-    <div id="app">
-        <div id="messages">
-            <div v-for="message in messages">
-                <strong>{{ message.username }}</strong>: {{ message.text }}
+
+<body class="bg-gray-100">
+    <div id="app" class="max-w-3xl mx-auto flex flex-col">
+        <div class="chat-container bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="chat-header bg-gray-800 text-white py-4 px-6">
+                <h1 class="text-lg font-bold">Group Chat - {{currentUser}}</h1>
+            </div>
+            <div class="chat-body p-6">
+                <div v-for="message in messages">
+                    <div class="chat-message  flex flex-col mb-4 justify-start">
+                        <div class="username font-bold text-sm"
+                            :class="{'text-right': currentUser == message.username}">{{ message.username }}</div>
+                        <div class="text bg-gray-200 rounded-lg py-2 px-4 inline-block w-auto"
+                            :class="{'self-end': currentUser == message.username}">{{ message.text }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-sidebar bg-gray-100 p-6">
+                <h2 class="text-lg font-bold mb-4">Users</h2>
+                <ul>
+                    <li v-for="user in users" class="mb-2">{{ user }}</li>
+                </ul>
+            </div>
+            <div class="chat-input bg-gray-200 p-6 flex items-center">
+                <input type="text" id="message" placeholder="Type your message..." v-model="message"
+                    class="flex-1 py-2 px-4 rounded-lg mr-4">
+                <button id="send" @keyup.a="send" @click="send"
+                    class="bg-gray-800 text-white py-2 px-4 rounded-lg">Send</button>
             </div>
         </div>
-        <input type="text" id="message" v-model="message">
-        <button id="send" @keyup.a="send" @click="send">Send</button>
-        <div id="users">
-            <div v-for="user in users">
-                {{ user }}
+
+        <div id="change_username" class="mt-6">
+            <div class="chat-input bg-gray-200 p-6 flex items-center">
+                <input type="text" id="username" v-model="username" class="flex-1 py-2 px-4 rounded-lg mr-4">
+                <button id="change_username" @click="changeUsername"
+                    class="bg-gray-800 text-white py-2 px-4 rounded-lg">Change Username</button>
             </div>
-        </div>
-        <div id="change_username">
-            <input type="text" id="username" v-model="username">
-            <button id="change_username" @click="changeUsername">Change Username</button>
         </div>
     </div>
-
-
 </body>
 <script>
     //connect to server
     var socket = new WebSocket('ws://localhost:3001');
-   
+
     const addMessage = (message) => {
         //add message to messages
         Vue.set(app.messages, app.messages.length, message);
@@ -58,6 +77,8 @@
     }
 
     const addUser = (user) => {
+        Vue.set(app, 'currentUser', user);
+
         //add user to users
         Vue.set(app.users, app.users.length, user);
     }
@@ -92,6 +113,7 @@
         data: {
             message: '',
             username: '',
+            currentUser: '',
             messages: [],
             users: []
         },
@@ -104,7 +126,7 @@
             },
             changeUsername: function () {
                 //send message to server
-                socket.send(JSON.stringify({ type:"CHANGE_USERNAME", data: this.username }));
+                socket.send(JSON.stringify({ type: "CHANGE_USERNAME", data: this.username }));
                 //clear message
                 this.username = '';
             }
